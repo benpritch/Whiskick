@@ -1,0 +1,6 @@
+pysher==1.0.8
+requests
+Pillow
+python-dotenv
+spidev
+rpi-lgpio
