@@ -24,8 +24,10 @@ def main():
         
     logger.info(f"Starting Whisplay Kick Alerter for user: {username}")
     
+    tts_enabled = os.getenv("TTS_ENABLED", "true").lower() not in ("false", "0", "no")
+
     display_manager = DisplayManager()
-    tts_player = TTSPlayer()
+    tts_player = TTSPlayer() if tts_enabled else None
     alert_queue = queue.Queue()
     reward_queue = queue.Queue()
     tts_queue = queue.Queue()
@@ -48,7 +50,7 @@ def main():
         logger.info(f"Queuing TTS: {text}")
         tts_queue.put(text)
 
-    client = KickClient(username, on_gift_sub, on_reward_callback=on_reward_redeemed, on_kicks_callback=on_kicks_gifted, on_tts_callback=on_tts_command)
+    client = KickClient(username, on_gift_sub, on_reward_callback=on_reward_redeemed, on_kicks_callback=on_kicks_gifted, on_tts_callback=on_tts_command if tts_enabled else None)
     
     try:
         client.connect()
@@ -97,13 +99,14 @@ def main():
             except queue.Empty:
                 pass
 
-            try:
-                tts_text = tts_queue.get_nowait()
-                logger.info(f"Processing TTS: {tts_text}")
-                tts_player.speak_async(tts_text)
-                tts_queue.task_done()
-            except queue.Empty:
-                pass
+            if tts_player:
+                try:
+                    tts_text = tts_queue.get_nowait()
+                    logger.info(f"Processing TTS: {tts_text}")
+                    tts_player.speak_async(tts_text)
+                    tts_queue.task_done()
+                except queue.Empty:
+                    pass
 
             time.sleep(0.1)
             
