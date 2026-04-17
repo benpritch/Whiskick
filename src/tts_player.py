@@ -17,6 +17,28 @@ _SAMPLING_RATE = 44100
 _SPK2ID = {"MALE": 0}
 
 
+def _ensure_nltk_data():
+    import nltk
+    for resource in ("averaged_perceptron_tagger_eng", "averaged_perceptron_tagger", "cmudict"):
+        nltk.download(resource, quiet=True)
+
+
+def _patch_tiny_tts():
+    """Register a stub for tiny_tts before submodule imports so its __init__.py
+    (which unconditionally imports torch) is never executed."""
+    import sys, types, importlib.util
+    if "tiny_tts" in sys.modules:
+        return
+    spec = importlib.util.find_spec("tiny_tts")
+    if spec is None:
+        raise ImportError("tiny_tts not installed — run: pip install tiny-tts --no-deps")
+    stub = types.ModuleType("tiny_tts")
+    stub.__path__ = list(spec.submodule_search_locations)
+    stub.__package__ = "tiny_tts"
+    stub.__spec__ = spec
+    sys.modules["tiny_tts"] = stub
+
+
 def _insert_blanks(lst, item=0):
     result = [item] * (len(lst) * 2 + 1)
     result[1::2] = lst
@@ -59,6 +81,8 @@ class _Engine:
         self._dec  = _sess("decoder.onnx")
 
     def synthesize(self, text: str, output_path: str, speed: float = 1.0):
+        _patch_tiny_tts()
+        _ensure_nltk_data()
         from tiny_tts.text.english import normalize_text, grapheme_to_phoneme
         from tiny_tts.text import phonemes_to_ids
 
@@ -132,8 +156,8 @@ class TTSPlayer:
         cmds = [
             ['amixer', '-c', card, 'sset', 'Left Output Mixer PCM', 'on'],
             ['amixer', '-c', card, 'sset', 'Right Output Mixer PCM', 'on'],
-            ['amixer', '-c', card, 'sset', 'Speaker', '121'],
-            ['amixer', '-c', card, 'sset', 'Playback', '230'],
+            ['amixer', '-c', card, 'sset', 'Speaker', '100%'],
+            ['amixer', '-c', card, 'sset', 'Playback', '100%'],
         ]
         for cmd in cmds:
             try:
