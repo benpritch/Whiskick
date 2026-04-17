@@ -46,8 +46,9 @@ class DisplayManager:
             return
 
         print(f"Triggering alert for {gifter_username}...")
-        
-        # 1. Turn on backlight
+
+        # 1. Clear old content before turning on backlight
+        self.board.fill_screen(0x0000)
         self.board.set_backlight(100)
         
         # 2. Flash LEDs
@@ -190,6 +191,7 @@ class DisplayManager:
             print(f"[MOCK DISPLAY] Reward Alert: {username} redeemed '{reward_title}'")
             return
 
+        self.board.fill_screen(0x0000)
         self.board.set_backlight(100)
         self._flash_leds()
 
@@ -291,6 +293,7 @@ class DisplayManager:
             print(f"[MOCK DISPLAY] Kicks Alert: {username} gifted {gift_name} x{amount}")
             return
 
+        self.board.fill_screen(0x0000)
         self.board.set_backlight(100)
         self._flash_leds()
 
