@@ -11,12 +11,13 @@ KICK_PUSHER_CLUSTER = 'us2'
 logger = logging.getLogger(__name__)
 
 class KickClient:
-    def __init__(self, username, on_gift_sub_callback, on_reward_callback=None, on_kicks_callback=None, on_tts_callback=None):
+    def __init__(self, username, on_gift_sub_callback, on_reward_callback=None, on_kicks_callback=None, on_tts_callback=None, tts_allowed_badges=("vip",)):
         self.username = username
         self.on_gift_sub_callback = on_gift_sub_callback
         self.on_reward_callback = on_reward_callback
         self.on_kicks_callback = on_kicks_callback
         self.on_tts_callback = on_tts_callback
+        self.tts_allowed_badges = tts_allowed_badges  # None = anyone, tuple/list = badge required
         self.chatroom_id = None
         self.channel_id = None
         self.pusher = None
@@ -88,11 +89,15 @@ class KickClient:
             logger.info(f"[chat] {username}: {content}")
 
             if content.startswith('!tts ') and self.on_tts_callback:
-                badges = sender.get('identity', {}).get('badges', [])
-                if any(b.get('type') == 'vip' for b in badges):
+                if self.tts_allowed_badges is None:
+                    allowed = True
+                else:
+                    badges = sender.get('identity', {}).get('badges', [])
+                    allowed = any(b.get('type') in self.tts_allowed_badges for b in badges)
+                if allowed:
                     tts_text = content[5:].strip()
                     if tts_text:
-                        logger.info(f"TTS command from VIP {username}: {tts_text}")
+                        logger.info(f"TTS command from {username}: {tts_text}")
                         self.on_tts_callback(tts_text)
         except Exception as e:
             logger.error(f"Error handling chat message: {e}")
