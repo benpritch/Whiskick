@@ -52,6 +52,22 @@ LOG_LEVEL=INFO    # INFO, DEBUG, WARNING, ERROR, CRITICAL
 
 The script automatically creates a Python virtual environment and installs dependencies on first run.
 
+### 5. (Optional) Run on startup
+
+To install as a systemd service that starts automatically on boot:
+
+```bash
+./install.sh
+```
+
+To remove the service:
+
+```bash
+./uninstall.sh
+```
+
+Use `sudo systemctl status kick-alerter` to check the service, and `journalctl -u kick-alerter -f` to follow its logs.
+
 ## What It Does
 
 Connects to Kick.com's real-time event stream via WebSocket and renders alerts directly on the LCD display:
@@ -80,7 +96,9 @@ kick/
 │   └── Whisplay/Driver/    # WhisPlay LCD driver and board installers
 ├── .env.example            # Environment variable template
 ├── requirements.txt        # Python dependencies
-└── run.sh                  # Startup script
+├── run.sh                  # Startup script
+├── install.sh              # Install as systemd service (auto-start on boot)
+└── uninstall.sh            # Remove systemd service
 ```
 
 ## Dependencies
