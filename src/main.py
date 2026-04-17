@@ -14,6 +14,7 @@ logger = logging.getLogger('WhisplayKickApp')
 def main():
     load_dotenv()
     setup_logging()
+    # Called again after connect so pysher's loggers (created during connect) are also silenced
     
     username = os.getenv("KICK_USERNAME")
     if not username or username == "your_kick_username_here":
@@ -44,6 +45,7 @@ def main():
     
     try:
         client.connect()
+        setup_logging()
         logger.info("Application is running. Waiting for events...")
         
         last_button_state = False
