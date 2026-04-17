@@ -80,6 +80,38 @@ Connects to Kick.com's real-time event stream via WebSocket and renders alerts d
 
 Each alert plays an LED flash sequence and stays on screen for 20 seconds or until the button is pressed.
 
+## Customizing Alerts
+
+Alerts are customized through [config/alerts.json](config/alerts.json), keyed by alert type. If the file is missing, empty, or an alert type is omitted, that alert uses its default static layout.
+
+### Alert types
+
+| Key         | Triggered by          | Header text        | Dynamic text                          |
+|-------------|-----------------------|--------------------|---------------------------------------|
+| `gift_sub`  | A viewer gifts subs   | `GIFTED SUB!`      | gifter username + `gifted N sub(s)!`  |
+| `reward`    | Channel point redeem  | `REWARD REDEEMED!` | redeemer username + reward title      |
+| `kicks`     | A viewer sends Kicks  | `KICK GIFTED!`     | sender username + gift name (+ count) |
+
+### Options
+
+| Option | Type   | Description                                                                 |
+|--------|--------|-----------------------------------------------------------------------------|
+| `gif`  | string | Filename of an animated GIF in `assets/`. When set, the GIF plays centered on screen with the header above it and the username/subtitle below. Loops until the 20s timeout or button press. If the file is missing, the alert falls back to the static layout. |
+
+### Example
+
+Drop your GIFs into `assets/` and point to them from `config/alerts.json`:
+
+```json
+{
+  "gift_sub": { "gif": "giftsub.gif" },
+  "reward":   { "gif": "reward.gif" },
+  "kicks":    { "gif": "kicks.gif" }
+}
+```
+
+You can configure just a subset — e.g. `{ "gift_sub": { "gif": "party.gif" } }` enables the GIF only for gift subs; `reward` and `kicks` keep their default layouts.
+
 ## Project Structure
 
 ```
@@ -92,6 +124,8 @@ kick/
 ├── assets/
 │   ├── background.jpg      # Alert background image
 │   └── pixel.ttf           # Font used for alert text
+├── config/
+│   └── alerts.json         # Per-alert-type customization (GIFs, etc.)
 ├── vendor/
 │   └── Whisplay/Driver/    # WhisPlay LCD driver and board installers
 ├── .env.example            # Environment variable template
