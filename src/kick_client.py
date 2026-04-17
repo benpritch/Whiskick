@@ -75,12 +75,12 @@ class KickClient:
     def _on_error(self, data):
         logger.error(f"Pusher error: {data}")
 
+    def _parse_event(self, data):
+        return json.loads(data) if isinstance(data, str) else data
+
     def _on_chat_message(self, data):
         try:
-            if isinstance(data, str):
-                event_data = json.loads(data)
-            else:
-                event_data = data
+            event_data = self._parse_event(data)
             sender = event_data.get('sender', {}).get('username', 'unknown')
             content = event_data.get('content', '')
             logger.info(f"[chat] {sender}: {content}")
@@ -89,10 +89,7 @@ class KickClient:
 
     def _on_kicks_gifted(self, data):
         try:
-            if isinstance(data, str):
-                event_data = json.loads(data)
-            else:
-                event_data = data
+            event_data = self._parse_event(data)
             username = event_data.get('sender', {}).get('username', 'Someone')
             gift = event_data.get('gift', {})
             gift_name = gift.get('name', 'a Kick')
@@ -105,10 +102,7 @@ class KickClient:
 
     def _on_reward_redeemed(self, data):
         try:
-            if isinstance(data, str):
-                event_data = json.loads(data)
-            else:
-                event_data = data
+            event_data = self._parse_event(data)
             username = event_data.get('username', 'Someone')
             reward_title = event_data.get('reward_title', 'Reward')
             logger.info(f"Reward redeemed! User: {username}, Reward: {reward_title}")
@@ -119,17 +113,11 @@ class KickClient:
 
     def _on_gift_sub(self, data):
         try:
-            if isinstance(data, str):
-                event_data = json.loads(data)
-            else:
-                event_data = data
-                
+            event_data = self._parse_event(data)
             gifter_username = event_data.get('gifter_username', 'Someone')
             gifted_usernames = event_data.get('gifted_usernames', [])
             num_subs = len(gifted_usernames)
-            
             logger.info(f"Gift sub event! Gifter: {gifter_username}, Count: {num_subs}")
-            
             if self.on_gift_sub_callback:
                 self.on_gift_sub_callback(gifter_username, num_subs)
         except Exception as e:
