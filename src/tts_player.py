@@ -10,7 +10,7 @@ import requests
 logger = logging.getLogger(__name__)
 
 _ONNX_CACHE = os.path.join(os.path.expanduser("~"), ".cache", "tiny-tts", "onnx")
-_ONNX_BASE = "https://media.githubusercontent.com/media/tronghieuit/tiny-tts/develop/onnx"
+_ONNX_BASE = "https://raw.githubusercontent.com/tronghieuit/tiny-tts/develop/onnx"
 _ONNX_FILES = ["text_encoder.onnx", "duration_predictor.onnx", "flow.onnx", "decoder.onnx"]
 
 _SAMPLING_RATE = 44100
@@ -41,6 +41,7 @@ def _ensure_onnx_models():
 class _Engine:
     def __init__(self):
         import onnxruntime as ort
+        ort.set_default_logger_severity(3)  # suppress warnings (GPU discovery noise)
         onnx_dir = _ensure_onnx_models()
         opts = ort.SessionOptions()
         opts.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
