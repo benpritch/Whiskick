@@ -38,6 +38,12 @@ Edit `.env` and set your Kick streamer username:
 KICK_USERNAME=your_kick_username_here
 ```
 
+Optionally set the log level (defaults to `WARNING` — errors and warnings only):
+
+```
+LOG_LEVEL=INFO    # INFO, DEBUG, WARNING, ERROR, CRITICAL
+```
+
 ### 4. Run
 
 ```bash
@@ -65,7 +71,8 @@ kick/
 ├── src/
 │   ├── main.py             # Entry point and event loop
 │   ├── kick_client.py      # Kick.com Pusher WebSocket client
-│   └── display_manager.py  # LCD rendering and LED control
+│   ├── display_manager.py  # LCD rendering and LED control
+│   └── logger.py           # Logging setup (controlled via LOG_LEVEL env var)
 ├── assets/
 │   ├── background.jpg      # Alert background image
 │   └── pixel.ttf           # Font used for alert text

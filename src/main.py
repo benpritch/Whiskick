@@ -7,12 +7,13 @@ from dotenv import load_dotenv
 
 from kick_client import KickClient
 from display_manager import DisplayManager
+from logger import setup_logging
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger('WhisplayKickApp')
 
 def main():
     load_dotenv()
+    setup_logging()
     
     username = os.getenv("KICK_USERNAME")
     if not username or username == "your_kick_username_here":
