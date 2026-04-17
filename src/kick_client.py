@@ -11,11 +11,12 @@ KICK_PUSHER_CLUSTER = 'us2'
 logger = logging.getLogger(__name__)
 
 class KickClient:
-    def __init__(self, username, on_gift_sub_callback, on_reward_callback=None, on_kicks_callback=None):
+    def __init__(self, username, on_gift_sub_callback, on_reward_callback=None, on_kicks_callback=None, on_tts_callback=None):
         self.username = username
         self.on_gift_sub_callback = on_gift_sub_callback
         self.on_reward_callback = on_reward_callback
         self.on_kicks_callback = on_kicks_callback
+        self.on_tts_callback = on_tts_callback
         self.chatroom_id = None
         self.channel_id = None
         self.pusher = None
@@ -81,9 +82,18 @@ class KickClient:
     def _on_chat_message(self, data):
         try:
             event_data = self._parse_event(data)
-            sender = event_data.get('sender', {}).get('username', 'unknown')
+            sender = event_data.get('sender', {})
+            username = sender.get('username', 'unknown')
             content = event_data.get('content', '')
-            logger.info(f"[chat] {sender}: {content}")
+            logger.info(f"[chat] {username}: {content}")
+
+            if content.startswith('!tts ') and self.on_tts_callback:
+                badges = sender.get('identity', {}).get('badges', [])
+                if any(b.get('type') == 'vip' for b in badges):
+                    tts_text = content[5:].strip()
+                    if tts_text:
+                        logger.info(f"TTS command from VIP {username}: {tts_text}")
+                        self.on_tts_callback(tts_text)
         except Exception as e:
             logger.error(f"Error handling chat message: {e}")
 

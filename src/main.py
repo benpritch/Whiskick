@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from kick_client import KickClient
 from display_manager import DisplayManager
 from logger import setup_logging
+from tts_player import TTSPlayer
 
 logger = logging.getLogger('WhisplayKickApp')
 
@@ -24,8 +25,10 @@ def main():
     logger.info(f"Starting Whisplay Kick Alerter for user: {username}")
     
     display_manager = DisplayManager()
+    tts_player = TTSPlayer()
     alert_queue = queue.Queue()
     reward_queue = queue.Queue()
+    tts_queue = queue.Queue()
 
     def on_gift_sub(gifter_username, count):
         logger.info(f"Queuing alert: {gifter_username} gifted {count} subs!")
@@ -41,7 +44,11 @@ def main():
         logger.info(f"Queuing kicks alert: {username} gifted {gift_name} x{amount}")
         kicks_queue.put((username, gift_name, amount))
 
-    client = KickClient(username, on_gift_sub, on_reward_callback=on_reward_redeemed, on_kicks_callback=on_kicks_gifted)
+    def on_tts_command(text):
+        logger.info(f"Queuing TTS: {text}")
+        tts_queue.put(text)
+
+    client = KickClient(username, on_gift_sub, on_reward_callback=on_reward_redeemed, on_kicks_callback=on_kicks_gifted, on_tts_callback=on_tts_command)
     
     try:
         client.connect()
@@ -89,7 +96,15 @@ def main():
                 kicks_queue.task_done()
             except queue.Empty:
                 pass
-                
+
+            try:
+                tts_text = tts_queue.get_nowait()
+                logger.info(f"Processing TTS: {tts_text}")
+                tts_player.speak_async(tts_text)
+                tts_queue.task_done()
+            except queue.Empty:
+                pass
+
             time.sleep(0.1)
             
     except KeyboardInterrupt:

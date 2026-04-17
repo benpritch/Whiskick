@@ -4,3 +4,8 @@ Pillow
 python-dotenv
 spidev
 rpi-lgpio
+# TTS — tiny-tts is installed with --no-deps in run.sh to avoid pulling in torch/CUDA
+soundfile
+g2p-en
+onnxruntime
+numpy
