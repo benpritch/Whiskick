@@ -60,14 +60,25 @@ def main():
         logger.info("Application is running. Waiting for events...")
         
         last_button_state = False
-        
+        last_alert = None
+
         while True:
-            # Poll hardware button for simulation test directly
+            # Poll hardware button to replay the last alert (or a test alert if none yet)
             if display_manager.board:
                 current_button_state = display_manager.board.button_pressed()
                 if current_button_state and not last_button_state:
-                    logger.info("Hardware button pressed! Simulating a gift sub alert.")
-                    alert_queue.put(("TestUser", 5))
+                    if last_alert is None:
+                        logger.info("Hardware button pressed! No prior alert — simulating a gift sub alert.")
+                        alert_queue.put(("TestUser", 5))
+                    else:
+                        kind, args = last_alert
+                        logger.info(f"Hardware button pressed! Replaying last {kind} alert.")
+                        if kind == "gift":
+                            alert_queue.put(args)
+                        elif kind == "reward":
+                            reward_queue.put(args)
+                        elif kind == "kicks":
+                            kicks_queue.put(args)
                 last_button_state = current_button_state
 
             # Process any queued alerts
@@ -75,6 +86,7 @@ def main():
                 gifter, count = alert_queue.get_nowait()
                 logger.info(f"Processing alert: {gifter} gifted {count} subs!")
                 display_manager.trigger_alert(gifter, count)
+                last_alert = ("gift", (gifter, count))
                 if display_manager.board:
                     last_button_state = display_manager.board.button_pressed()
                 alert_queue.task_done()
@@ -85,6 +97,7 @@ def main():
                 username, reward_title = reward_queue.get_nowait()
                 logger.info(f"Processing reward alert: {username} redeemed {reward_title}")
                 display_manager.trigger_reward_alert(username, reward_title)
+                last_alert = ("reward", (username, reward_title))
                 if display_manager.board:
                     last_button_state = display_manager.board.button_pressed()
                 reward_queue.task_done()
@@ -95,6 +108,7 @@ def main():
                 username, gift_name, amount = kicks_queue.get_nowait()
                 logger.info(f"Processing kicks alert: {username} gifted {gift_name} x{amount}")
                 display_manager.trigger_kicks_alert(username, gift_name, amount)
+                last_alert = ("kicks", (username, gift_name, amount))
                 if display_manager.board:
                     last_button_state = display_manager.board.button_pressed()
                 kicks_queue.task_done()
