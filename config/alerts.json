@@ -1,3 +1,5 @@
 {
-    "reward":   { "gif": "reward.gif" }
+    "reward":   { "gif": "reward.gif" },
+    "gift_sub": { "gif": "giftsub.gif" },
+    "kicks":    { "gif": "kicks.gif" }
 }
