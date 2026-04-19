@@ -112,6 +112,23 @@ Drop your GIFs into `assets/` and point to them from `config/alerts.json`:
 
 You can configure just a subset — e.g. `{ "gift_sub": { "gif": "party.gif" } }` enables the GIF only for gift subs; `reward` and `kicks` keep their default layouts.
 
+## Battery-powered Pi Zero 2
+
+If you're running this on a battery, there are a couple of helper scripts that apply system-level tweaks to reduce idle power draw:
+
+```bash
+./scripts/enable-power-saving.sh    # apply tweaks (requires sudo; reboot after)
+./scripts/disable-power-saving.sh   # revert everything
+```
+
+The enable script:
+
+- Appends a fenced block to `config.txt` that disables onboard Bluetooth (`dtoverlay=disable-bt`), blanks HDMI (`hdmi_blanking=2`), and turns off the green ACT LED.
+- Disables the `bluetooth` and `hciuart` systemd services.
+- Installs a tiny `kick-power.service` unit that pins the CPU governor to `ondemand` at boot.
+
+The disable script reverses each of those steps. Both are idempotent and auto-`sudo`, and detect Bookworm's `/boot/firmware/config.txt` vs the older `/boot/config.txt`. A reboot is required for the `config.txt` changes to take effect.
+
 ## Project Structure
 
 ```
@@ -126,6 +143,9 @@ kick/
 │   └── pixel.ttf           # Font used for alert text
 ├── config/
 │   └── alerts.json         # Per-alert-type customization (GIFs, etc.)
+├── scripts/
+│   ├── enable-power-saving.sh   # Apply battery-saving tweaks (BT/HDMI/LED/CPU)
+│   └── disable-power-saving.sh  # Revert those tweaks
 ├── vendor/
 │   └── Whisplay/Driver/    # WhisPlay LCD driver and board installers
 ├── .env.example            # Environment variable template

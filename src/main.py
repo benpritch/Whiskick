@@ -124,7 +124,7 @@ def main():
                 except queue.Empty:
                     pass
 
-            time.sleep(0.1)
+            time.sleep(0.3)
             
     except KeyboardInterrupt:
         logger.info("Shutting down...")
