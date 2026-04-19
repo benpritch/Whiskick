@@ -27,8 +27,10 @@ GIF_TEXT_SUB_Y = 250
 
 
 class DisplayManager:
-    def __init__(self):
+    def __init__(self, connected_led_enabled=False):
         self.board = None
+        self.connected_led_enabled = connected_led_enabled
+        self._connected = False
 
         # Assets + config directories
         self.assets_dir = os.path.join(os.path.dirname(__file__), '..', 'assets')
@@ -140,6 +142,19 @@ class DisplayManager:
     # LEDs / input
     # ------------------------------------------------------------------
 
+    def set_connected(self, connected):
+        """Track pysher connection state and, if the idle LED is enabled, reflect it."""
+        self._connected = connected
+        self._apply_idle_led()
+
+    def _apply_idle_led(self):
+        if not self.board:
+            return
+        if self.connected_led_enabled and self._connected:
+            self.board.set_rgb(0, 255, 0)
+        else:
+            self.board.set_rgb(0, 0, 0)
+
     def _flash_leds(self):
         if not self.board:
             return
@@ -152,7 +167,7 @@ class DisplayManager:
         for r, g, b in color_sequence:
             self.board.set_rgb(r, g, b)
             time.sleep(0.2)
-        self.board.set_rgb(0, 0, 0)
+        self._apply_idle_led()
 
     def _wait_for_dismiss(self):
         """Block for ALERT_DURATION_S or until the button is pressed."""

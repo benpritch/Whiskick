@@ -27,8 +27,9 @@ def main():
     tts_enabled = os.getenv("TTS_ENABLED", "true").lower() not in ("false", "0", "no")
     _tts_badges_env = os.getenv("TTS_BADGES", "vip").strip().lower()
     tts_allowed_badges = None if _tts_badges_env == "none" else tuple(b.strip() for b in _tts_badges_env.split(",") if b.strip())
+    connected_led_enabled = os.getenv("CONNECTED_LED_ENABLED", "false").lower() not in ("false", "0", "no", "")
 
-    display_manager = DisplayManager()
+    display_manager = DisplayManager(connected_led_enabled=connected_led_enabled)
     tts_player = TTSPlayer() if tts_enabled else None
     alert_queue = queue.Queue()
     reward_queue = queue.Queue()
@@ -52,7 +53,7 @@ def main():
         logger.info(f"Queuing TTS: {text}")
         tts_queue.put(text)
 
-    client = KickClient(username, on_gift_sub, on_reward_callback=on_reward_redeemed, on_kicks_callback=on_kicks_gifted, on_tts_callback=on_tts_command if tts_enabled else None, tts_allowed_badges=tts_allowed_badges)
+    client = KickClient(username, on_gift_sub, on_reward_callback=on_reward_redeemed, on_kicks_callback=on_kicks_gifted, on_tts_callback=on_tts_command if tts_enabled else None, tts_allowed_badges=tts_allowed_badges, on_connection_state_callback=display_manager.set_connected)
     
     try:
         client.connect()

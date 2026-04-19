@@ -11,12 +11,13 @@ KICK_PUSHER_CLUSTER = 'us2'
 logger = logging.getLogger(__name__)
 
 class KickClient:
-    def __init__(self, username, on_gift_sub_callback, on_reward_callback=None, on_kicks_callback=None, on_tts_callback=None, tts_allowed_badges=("vip",)):
+    def __init__(self, username, on_gift_sub_callback, on_reward_callback=None, on_kicks_callback=None, on_tts_callback=None, tts_allowed_badges=("vip",), on_connection_state_callback=None):
         self.username = username
         self.on_gift_sub_callback = on_gift_sub_callback
         self.on_reward_callback = on_reward_callback
         self.on_kicks_callback = on_kicks_callback
         self.on_tts_callback = on_tts_callback
+        self.on_connection_state_callback = on_connection_state_callback
         self.tts_allowed_badges = tts_allowed_badges  # None = anyone, tuple/list = badge required
         self.chatroom_id = None
         self.channel_id = None
@@ -61,6 +62,11 @@ class KickClient:
 
     def _on_connection_established(self, data):
         logger.info("Pusher Connection established!")
+        if self.on_connection_state_callback:
+            try:
+                self.on_connection_state_callback(True)
+            except Exception as e:
+                logger.error(f"Connection state callback error: {e}")
         chatroom_channel_name = f'chatrooms.{self.chatroom_id}.v2'
         self.chatroom_channel = self.pusher.subscribe(chatroom_channel_name)
         self.chatroom_channel.bind('App\\Events\\ChatMessageEvent', self._on_chat_message)
@@ -76,6 +82,11 @@ class KickClient:
 
     def _on_error(self, data):
         logger.error(f"Pusher error: {data}")
+        if self.on_connection_state_callback:
+            try:
+                self.on_connection_state_callback(False)
+            except Exception as e:
+                logger.error(f"Connection state callback error: {e}")
 
     def _parse_event(self, data):
         return json.loads(data) if isinstance(data, str) else data
